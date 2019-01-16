@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" xmlns:tns="http://www.activiti.org/test" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:yaoqiang="http://bpmn.sourceforge.net" exporter="Yaoqiang BPMN Editor" exporterVersion="5.3" expressionLanguage="http://www.w3.org/1999/XPath" id="_1547619623412" name="" targetNamespace="http://www.activiti.org/test" typeLanguage="http://www.w3.org/2001/XMLSchema" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL http://bpmn.sourceforge.net/schemas/BPMN20.xsd">
+  <process id="second_approve" isClosed="false" isExecutable="true" name="二级审批" processType="None">
+    <extensionElements>
+      <yaoqiang:description/>
+      <yaoqiang:pageFormat height="841.8897637795276" imageableHeight="831.8897637795276" imageableWidth="588.1102362204724" imageableX="5.0" imageableY="5.0" orientation="0" width="598.1102362204724"/>
+      <yaoqiang:page background="#FFFFFF" horizontalCount="1" verticalCount="1"/>
+    </extensionElements>
+    <startEvent id="startevent" isInterrupting="true" name="开始" parallelMultiple="false">
+      <incoming>flow10</incoming>
+      <outgoing>flow1</outgoing>
+      <outputSet/>
+    </startEvent>
+    <userTask completionQuantity="1" id="submitFrom" implementation="##unspecified" isForCompensation="false" name="填写审批" startQuantity="1">
+      <extensionElements>
+        <activiti:formProperty id="message" name="申请信息" required="true" type="string"/>
+        <activiti:formProperty id="name" name="申请人姓名" required="true" type="string"/>
+        <activiti:formProperty datePattern="yyyy-MM-dd" id="submitTime" name="提交时间" required="true" type="date"/>
+        <activiti:formProperty id="submitType" name="确认申请" required="true" type="string"/>
+      </extensionElements>
+      <incoming>flow1</incoming>
+      <incoming>flow9</incoming>
+      <outgoing>flow2</outgoing>
+    </userTask>
+    <sequenceFlow id="flow1" sourceRef="startevent" targetRef="submitFrom"/>
+    <exclusiveGateway gatewayDirection="Unspecified" id="decideSubmit" name="提交OR取消">
+      <incoming>flow2</incoming>
+      <outgoing>flow3</outgoing>
+      <outgoing>flow8</outgoing>
+    </exclusiveGateway>
+    <sequenceFlow id="flow2" sourceRef="submitFrom" targetRef="decideSubmit"/>
+    <userTask completionQuantity="1" id="tl_approve" implementation="##unspecified" isForCompensation="false" name="主管审批" startQuantity="1">
+      <extensionElements>
+        <activiti:formProperty id="tlApprove" name="主管审批结果" type="string"/>
+        <activiti:formProperty id="tlMessage" name="主管备注" type="string"/>
+      </extensionElements>
+      <incoming>flow3</incoming>
+      <outgoing>flow4</outgoing>
+    </userTask>
+    <sequenceFlow id="flow3" sourceRef="decideSubmit" targetRef="tl_approve">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${submitType=="y"||submitType=="Y"}]]></conditionExpression>
+    </sequenceFlow>
+    <exclusiveGateway gatewayDirection="Unspecified" id="decideTLApprove" name="主管审批校验">
+      <incoming>flow4</incoming>
+      <outgoing>flow5</outgoing>
+      <outgoing>flow9</outgoing>
+    </exclusiveGateway>
+    <sequenceFlow id="flow4" sourceRef="tl_approve" targetRef="decideTLApprove"/>
+    <userTask completionQuantity="1" id="hr_approve" implementation="##unspecified" isForCompensation="false" name="人事审批" startQuantity="1">
+      <extensionElements>
+        <activiti:formProperty id="hrApprove" name="人事审批结果" type="string"/>
+        <activiti:formProperty id="hrMessage" name="人事备注" type="string"/>
+      </extensionElements>
+      <incoming>flow5</incoming>
+      <outgoing>flow6</outgoing>
+    </userTask>
+    <sequenceFlow id="flow5" sourceRef="decideTLApprove" targetRef="hr_approve"/>
+    <exclusiveGateway gatewayDirection="Unspecified" id="decideHRApprove" name="人事审批校验">
+      <incoming>flow6</incoming>
+      <outgoing>flow7</outgoing>
+      <outgoing>flow10</outgoing>
+    </exclusiveGateway>
+    <sequenceFlow id="flow6" sourceRef="hr_approve" targetRef="decideHRApprove"/>
+    <endEvent id="endEvent" name="结束">
+      <incoming>flow7</incoming>
+      <inputSet/>
+    </endEvent>
+    <sequenceFlow id="flow7" sourceRef="decideHRApprove" targetRef="endEvent">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${hrApprove=="y"||hrApprove=="Y"}]]></conditionExpression>
+    </sequenceFlow>
+    <endEvent id="endEventCancel" name="取消">
+      <incoming>flow8</incoming>
+      <inputSet/>
+    </endEvent>
+    <sequenceFlow id="flow8" sourceRef="decideSubmit" targetRef="endEventCancel">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${submitType=="n"||submitType=="N"}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow9" sourceRef="decideTLApprove" targetRef="submitFrom">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${tlApprove=="n"||tlApprove=="N"}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow10" sourceRef="decideHRApprove" targetRef="startevent">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${hrApprove=="n"||hrApprove=="N"}]]></conditionExpression>
+    </sequenceFlow>
+  </process>
+  <bpmndi:BPMNDiagram id="Yaoqiang_Diagram-second_approve" name="Untitled Diagram" resolution="96.0">
+    <bpmndi:BPMNPlane bpmnElement="second_approve">
+      <bpmndi:BPMNShape bpmnElement="startevent" id="Yaoqiang-startevent">
+        <omgdc:Bounds height="32.0" width="32.0" x="120.0" y="220.0"/>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="21.02" width="28.0" x="122.0" y="259.47"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="submitFrom" id="Yaoqiang-submitFrom">
+        <omgdc:Bounds height="55.0" width="105.0" x="200.0" y="210.0"/>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="21.02" width="50.0" x="227.5" y="228.99"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="decideSubmit" id="Yaoqiang-decideSubmit" isMarkerVisible="true">
+        <omgdc:Bounds height="42.0" width="42.0" x="350.0" y="218.0"/>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="21.02" width="65.0" x="338.5" y="262.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="tl_approve" id="Yaoqiang-tl_approve">
+        <omgdc:Bounds height="55.0" width="105.0" x="435.0" y="211.0"/>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="21.02" width="50.0" x="462.5" y="229.99"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="decideTLApprove" id="Yaoqiang-decideTLApprove" isMarkerVisible="true">
+        <omgdc:Bounds height="42.0" width="42.0" x="585.0" y="219.0"/>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="21.02" width="72.0" x="570.0" y="263.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="hr_approve" id="Yaoqiang-hr_approve">
+        <omgdc:Bounds height="55.0" width="105.0" x="670.0" y="212.0"/>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="21.02" width="50.0" x="697.5" y="230.99"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="decideHRApprove" id="Yaoqiang-decideHRApprove" isMarkerVisible="true">
+        <omgdc:Bounds height="42.0" width="42.0" x="820.0" y="220.0"/>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="21.02" width="72.0" x="805.0" y="264.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endEvent" id="Yaoqiang-endEvent">
+        <omgdc:Bounds height="32.0" width="32.0" x="905.0" y="223.0"/>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="21.02" width="28.0" x="907.0" y="262.47"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endEventCancel" id="Yaoqiang-endEventCancel">
+        <omgdc:Bounds height="32.0" width="32.0" x="505.0" y="340.0"/>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="21.02" width="28.0" x="507.0" y="379.47"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="flow10" id="Yaoqiang-flow10">
+        <omgdi:waypoint x="840.0" y="221.0"/>
+        <omgdi:waypoint x="840.0" y="100.0"/>
+        <omgdi:waypoint x="686.0" y="100.0"/>
+        <omgdi:waypoint x="511.0" y="100.0"/>
+        <omgdi:waypoint x="137.0" y="100.0"/>
+        <omgdi:waypoint x="136.0" y="220.0"/>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="21.02" width="181.0" x="398.0" y="89.49"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow9" id="Yaoqiang-flow9">
+        <omgdi:waypoint x="604.0" y="259.0"/>
+        <omgdi:waypoint x="604.0" y="398.0"/>
+        <omgdi:waypoint x="427.0" y="398.0"/>
+        <omgdi:waypoint x="252.0" y="398.0"/>
+        <omgdi:waypoint x="252.5" y="265.0"/>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="21.02" width="171.0" x="345.75" y="387.49"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow8" id="Yaoqiang-flow8">
+        <omgdi:waypoint x="370.0" y="259.0"/>
+        <omgdi:waypoint x="370.0" y="357.0"/>
+        <omgdi:waypoint x="505.0312805773287" y="357.0"/>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="21.02" width="187.0" x="295.02" y="346.49"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow7" id="Yaoqiang-flow7">
+        <omgdi:waypoint x="862.0" y="241.0"/>
+        <omgdi:waypoint x="905.0" y="239.0"/>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="21.02" width="182.0" x="792.5" y="229.49"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow6" id="Yaoqiang-flow6">
+        <omgdi:waypoint x="775.0" y="239.5"/>
+        <omgdi:waypoint x="820.0" y="241.0"/>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="21.02" width="6.0" x="794.5" y="229.74"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow5" id="Yaoqiang-flow5">
+        <omgdi:waypoint x="627.0" y="240.0"/>
+        <omgdi:waypoint x="670.0" y="239.5"/>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="21.02" width="6.0" x="645.5" y="229.24"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow4" id="Yaoqiang-flow4">
+        <omgdi:waypoint x="540.0" y="238.5"/>
+        <omgdi:waypoint x="585.0" y="240.0"/>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="21.02" width="6.0" x="559.5" y="228.74"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow3" id="Yaoqiang-flow3">
+        <omgdi:waypoint x="392.0" y="239.0"/>
+        <omgdi:waypoint x="435.0" y="238.5"/>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="21.02" width="188.0" x="319.5" y="228.24"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow2" id="Yaoqiang-flow2">
+        <omgdi:waypoint x="305.0" y="237.5"/>
+        <omgdi:waypoint x="350.0" y="239.0"/>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="21.02" width="6.0" x="324.5" y="227.74"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow1" id="Yaoqiang-flow1">
+        <omgdi:waypoint x="152.0" y="236.0"/>
+        <omgdi:waypoint x="200.0" y="237.5"/>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="21.02" width="6.0" x="173.0" y="226.24"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>
