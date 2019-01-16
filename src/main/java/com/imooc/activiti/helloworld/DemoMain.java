@@ -53,11 +53,11 @@ public class DemoMain {
                 Map<String, Object> variables = Maps.newHashMap();
                 for (FormProperty property : formProperties) {
                     String line = null;
-                    if (StringFormType.class.isInstance(property.getType())) {
+                    if (property.getType() instanceof StringFormType) {
                         LOGGER.info("请输入 {} ?", property.getName());
                         line = scanner.nextLine();
                         variables.put(property.getId(), line);
-                    } else if (DateFormType.class.isInstance(property.getType())) {
+                    } else if (property.getType() instanceof DateFormType) {
                         LOGGER.info("请输入 {} 格式 (yyyy-MM-dd)?", property.getName());
                         line = scanner.nextLine();
                         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
