@@ -30,13 +30,17 @@ public class DemoMain {
         LOGGER.info("启动我们的程序");
         //创建流程引擎
         ProcessEngine processEngine = getProcessEngine();
-
         //部署流程定义文件
         ProcessDefinition processDefinition = getProcessDefinition(processEngine);
         //启动运行流程
         ProcessInstance processInstance = getProcessInstance(processEngine, processDefinition);
-
         //处理流程任务
+        processTask(processEngine, processInstance);
+
+        LOGGER.info("结束我们的程序");
+    }
+
+    private static void processTask(ProcessEngine processEngine, ProcessInstance processInstance) throws ParseException {
         Scanner scanner = new Scanner(System.in);
         while (processInstance != null && !processInstance.isEnded()) {
 
@@ -50,24 +54,8 @@ public class DemoMain {
                 TaskFormData taskFormData = formService.getTaskFormData(task.getId());
                 List<FormProperty> formProperties = taskFormData.getFormProperties();
 
-                Map<String, Object> variables = Maps.newHashMap();
-                for (FormProperty property : formProperties) {
-                    String line = null;
-                    if (property.getType() instanceof StringFormType) {
-                        LOGGER.info("请输入 {} ?", property.getName());
-                        line = scanner.nextLine();
-                        variables.put(property.getId(), line);
-                    } else if (property.getType() instanceof DateFormType) {
-                        LOGGER.info("请输入 {} 格式 (yyyy-MM-dd)?", property.getName());
-                        line = scanner.nextLine();
-                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                        Date date = dateFormat.parse(line);
-                        variables.put(property.getId(), date);
-                    }else {
-                        LOGGER.info("类型暂不支持 {}",property.getType());
-                    }
-                    LOGGER.info("您输入的内容是 [{}]", line);
-                }
+                Map<String, Object> variables = getMap(scanner, formProperties);
+
                 taskService.complete(task.getId(),variables);
                 processInstance = processEngine.getRuntimeService()
                         .createProcessInstanceQuery()
@@ -75,8 +63,29 @@ public class DemoMain {
                         .singleResult();
             }
         }
+        scanner.close();
+    }
 
-        LOGGER.info("结束我们的程序");
+    private static Map<String, Object> getMap(Scanner scanner, List<FormProperty> formProperties) throws ParseException {
+        Map<String, Object> variables = Maps.newHashMap();
+        for (FormProperty property : formProperties) {
+            String line = null;
+            if (property.getType() instanceof StringFormType) {
+                LOGGER.info("请输入 {} ?", property.getName());
+                line = scanner.nextLine();
+                variables.put(property.getId(), line);
+            } else if (property.getType() instanceof DateFormType) {
+                LOGGER.info("请输入 {} 格式 (yyyy-MM-dd)?", property.getName());
+                line = scanner.nextLine();
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                Date date = dateFormat.parse(line);
+                variables.put(property.getId(), date);
+            }else {
+                LOGGER.info("类型暂不支持 {}",property.getType());
+            }
+            LOGGER.info("您输入的内容是 [{}]", line);
+        }
+        return variables;
     }
 
     private static ProcessInstance getProcessInstance(ProcessEngine processEngine, ProcessDefinition processDefinition) {
